@@ -184,6 +184,7 @@ Conversation Orchestrator
 
 - `content` 落库前按第 9 章规则脱敏，日志不落原文。
 - `used_context` 仅 assistant turn 有值，user turn 为 null。
+- 顶层 `persona_version` 是会话当前激活版本；`used_context.persona_version` 是本次组装实际使用的版本。组装后人格若被更新，两者可能不同，排障时以 `used_context` 为准。
 - `tokens` 用于预算校准，缺失不阻断。
 
 ### 5.6 数据分级
@@ -204,6 +205,7 @@ PreferenceService.relevant(session, message) -> PreferenceItem[]
 MemoryService.search(query, session, topK) -> EpisodicMemory[]
 WorkingContextService.get(session) -> WorkingContext
 ContextAssembler.assemble(session, message) -> ContextBundle
+EmbeddingProvider.embed(texts: list[str]) -> list[list[float]]
 LLMProvider.chat(messages, options) -> Reply
 MemoryExtractor.extract(turn) -> MemoryCandidate[]
 ```
@@ -268,7 +270,7 @@ class RetrievedItem:
 
 1. 接收消息，加载 PersonaProfile 激活版本。
 2. 召回相关偏好：按 domain、关键词、最近使用、置信度排序。
-3. 检索情景记忆：query + recency + importance，topK 可配置。
+3. 用 EmbeddingProvider 把 query 向量化，按向量 + recency + importance 检索情景记忆，topK 可配置。
 4. 加载 Working Context，按 TTL 清理过期项。
 5. ContextAssembler 按 token 预算裁剪：人格固定 > 工作上下文 > 偏好 > 情景记忆。
 6. PromptBuilder 从结构化字段生成 system prompt，不把人格写死在代码。
@@ -325,10 +327,20 @@ src/snowfoxclaw/
     persona.py
     preferences.py
     memories.py
-  schema/             # M0-1 产出的 JSON Schema
+  schema/             # M0-1a 字段清单、M0-1b JSON Schema
   privacy/            # M0-2 产出的分级与敏感规则
-config.yaml           # M0-6 产出，随包分发默认值
+  config.default.yaml # M0-6 产出，随包分发的内置默认值
 ```
+
+配置文件分三层，避免「随包默认」与「用户配置」混淆：
+
+| 层级 | 位置 | 用途 |
+| --- | --- | --- |
+| 内置默认 | `src/snowfoxclaw/config.default.yaml` | 随包分发，只读，随版本升级覆盖 |
+| 用户覆盖 | `~/.config/snowfoxclaw/config.yaml`；Windows 为 `%APPDATA%\snowfoxclaw\config.yaml` | 用户写入，优先于内置默认 |
+| 环境变量 | `SNOWFOXCLAW_CONFIG` 指向自定义路径 | 最高优先级，测试与多实例用 |
+
+合并顺序：内置默认 ← 用户覆盖 ← 环境变量。M0-6 只需产出内置默认与用户覆盖的字段清单，不碰用户实际文件。
 
 `apps/agentd/` 不单独存在，改为 `foxclaw serve` 子命令，挂在现有 `foxclaw` 入口下。
 
@@ -347,7 +359,7 @@ config.yaml           # M0-6 产出，随包分发默认值
 | 索引 | SQLite 存向量 BLOB + 内存余弦；数据量 <10 万条不引专用向量库 |
 | 维度 | 写入配置 embedding.dim，迁移时固定，不允许运行时变更 |
 
-M0 确定模型与维度并写入 config.yaml，第 2 周按此实现，避免表结构返工。
+M0 确定模型与维度并写入 `config.default.yaml` 的 `embedding.dim`，第 2 周按此实现，避免表结构返工。
 
 ### 8.4 LLM
 
@@ -371,7 +383,7 @@ class EmbeddingProvider(Protocol):
 | LocalBgeEmbedding | 本地推理，默认生产路径 | onnxruntime 或 sentence-transformers |
 | OllamaEmbedding | 走 Ollama /api/embeddings | 本地 Ollama |
 
-规则：`dim` 由实现声明，与 config.yaml 的 `embedding.dim` 必须一致，启动时校验，不一致直接失败而不是降级。
+规则：`dim` 由实现声明，与生效配置（内置默认经用户覆盖、环境变量合并后）的 `embedding.dim` 必须一致，启动时校验，不一致直接失败而不是降级。
 
 ### 8.6 依赖清单（本版新增，随 M0-8 落地）
 

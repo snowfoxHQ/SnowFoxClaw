@@ -17,14 +17,19 @@
 
 | ID | 任务 | 产出 | 验收 |
 | --- | --- | --- | --- |
-| M0-1 | 冻结 Persona/Preference/Episodic/WorkingContext/ConversationTurn Schema | `schema/*.json` | 字段、敏感级、版本号评审通过 |
+| M0-1a | 五个 schema 的字段清单评审（markdown 表格即可） | `schema/fields.md` | 字段名、类型、敏感级评审通过 |
+| M0-1b | JSON Schema 落地 | `schema/*.json` | 与 M0-1a 一致，可被 pytest 校验 |
 | M0-2 | 定义数据分级与敏感检测规则 | `privacy/data_class.md` | 三类分级、敏感正则清单 |
 | M0-3 | 建 20 条人格评估对话 + 10 条记忆评估用例 | `eval/cases.yaml` | 覆盖语气、称呼、边界、禁忌、跨会话 |
 | M0-4 | 定义接口桩 | `api/openapi.yaml` | chat/persona/preferences/memories/eval |
 | M0-5 | 冻结 vecRecall adapter 接口 | `memory/retriever.py` 协议 | 签名与返回格式评审通过 |
-| M0-6 | embedding 模型与维度选型 | `config.yaml` + 迁移草案 | 模型、维度、索引方式确定 |
+| M0-6 | embedding 模型与维度选型 | `config.default.yaml` + 迁移草案 | 模型、维度、索引方式确定 |
 | M0-7 | 建仓库骨架与 CI | 子模块目录、lint、test | 空测试可跑 |
 | M0-8 | 依赖清单与本地服务骨架 | `pyproject.toml` 依赖 + `foxclaw serve` 空壳 | uvicorn 能起，`/healthz` 返回 200，CI 通过 |
+
+**为何 M0-1 拆两步**：3–5 天内同时冻结五个 JSON Schema 并写评估集偏紧。M0-1a 只出字段清单，M0-3 与 M0-1a 并行开写（用例里的字段引用先留占位），M0-1b 在 M0 内完成、不阻塞 M0-3；M0-1b 落地后回填 M0-3 的占位字段。这样 M0-3 不会因为 schema 文件没写完而空转。
+
+**并行关系**：M0-1a、M0-2、M0-3、M0-7、M0-8 互不阻塞，可同时推进；M0-1b 依赖 M0-1a；M0-4 依赖 M0-1a；M0-5、M0-6 独立。
 
 M0-8 与 M0-7 可并行，两者都在第 0 周内完成。M0-8 存在的理由：`foxclaw serve` 需要 FastAPI 栈，而当前 `pyproject.toml` 零依赖，不先落地会导致 W1-5 返工。
 
@@ -32,10 +37,10 @@ M0-8 与 M0-7 可并行，两者都在第 0 周内完成。M0-8 存在的理由�
 
 | ID | 任务 | 产出 | 依赖 |
 | --- | --- | --- | --- |
-| W1-1 | PersonaService：读写、版本、激活 | 服务 + 单测 | M0-1 |
-| W1-2 | PreferenceService：CRUD、相关召回、置信度 | 服务 + 单测 | M0-1 |
-| W1-3 | SQLite 存储层 Repository + 迁移（含 ConversationTurn 表） | 存储层 | M0-1、M0-8 |
-| W1-4 | ContextAssembler + PromptBuilder，组装人格/偏好 | 组装层 | W1-1、W1-2 |
+| W1-1 | PersonaService：读写、版本、激活 | 服务 + 单测 | M0-1b |
+| W1-2 | PreferenceService：CRUD、相关召回、置信度 | 服务 + 单测 | M0-1b |
+| W1-3 | SQLite 存储层 Repository + 迁移（含 ConversationTurn 表） | 存储层 | M0-1b、M0-8 |
+| W1-4 | ContextAssembler + PromptBuilder，仅组装 L0+L1 | 组装层 | W1-1、W1-2 |
 | W1-5 | Conversation Orchestrator + LLMProvider mock + `foxclaw serve` | `/v1/chat` 可跑 | W1-4 |
 | W1-6 | used_context 回读 | 响应字段 + 调试输出 | W1-5 |
 
@@ -47,12 +52,12 @@ M0-8 与 M0-7 可并行，两者都在第 0 周内完成。M0-8 存在的理由�
 
 | ID | 任务 | 产出 | 依赖 |
 | --- | --- | --- | --- |
-| W2-1 | MemoryService：写入/检索/删除 | 服务 + 单测 | M0-1 |
+| W2-1 | MemoryService：写入/检索/删除 | 服务 + 单测 | M0-1b |
 | W2-2 | LocalIndex + MemoryRetriever 实现 | 检索后端 | M0-5、M0-6 |
 | W2-3 | MemoryExtractor 规则版：敏感过滤 + 关键词/模板提取 | 候选生成 | W1-5、W2-1 |
 | W2-4 | CandidateStore：待确认 / 低风险自动入 | 候选流程 | W2-3 |
 | W2-5 | WorkingContextService：TTL、活跃实体、未决问题 | 服务 | W1-5 |
-| W2-6 | 跨会话恢复：新 session 加载偏好 + 相关记忆 | 连续性 | W2-1、W2-2、W2-5 |
+| W2-6 | 跨会话恢复：新 session 加载偏好 + 相关记忆；ContextAssembler 由 L0+L1 扩到 L2+L3 | 连续性 | W2-1、W2-2、W2-5、W1-4 |
 | W2-7 | 记忆查看/删除 API | `/v1/memories` | W2-1 |
 
 周验收：10 轮连续对话记得前面内容；新会话能召回 3 个显式偏好；删除记忆后不再召回；敏感信息不写入。
@@ -101,7 +106,7 @@ W3-6 与 W3-7 的依赖方向在此修正：上一稿写成 W3-6 依赖 W3-7、W
 
 | 风险 | 应对 |
 | --- | --- |
-| 人格做成提示词 | Schema 先行，M0-1 不通过不开工 |
+| 人格做成提示词 | Schema 先行，M0-1a / M0-1b 不通过不开工 |
 | 记忆过度写入 | 候选机制 + 敏感过滤 + 用户可删 |
 | 评估主观 | 固定用例 + 规则检查 + 人工评分 |
 | 模型不稳定 | LLMProvider mock 用于测试，分离模型能力与架构能力 |
