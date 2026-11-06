@@ -9,7 +9,7 @@ description = "个人 Agent 智能体，住在你设备里的狐狸"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "SnowFox", email = "142133502+snowfoxHQ@users.noreply.github.com" }]
+authors = [{ name = "snowfoxHQ", email = "142133502+snowfoxHQ@users.noreply.github.com" }]
 keywords = ["agent", "ai", "assistant", "snowfoxclaw"]
 requires-python = ">=3.10"
 dependencies = []
