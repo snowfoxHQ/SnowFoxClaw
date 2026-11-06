@@ -17,14 +17,27 @@ python -c "import snowfoxclaw; print(snowfoxclaw.__version__)"
 foxclaw --version
 ```
 
+## 本地服务
+
+```bash
+foxclaw serve                      # 默认 http://127.0.0.1:8765
+curl http://127.0.0.1:8765/healthz # {"status":"ok","version":"0.1.0"}
+```
+
+服务只监听回环地址，不对外暴露。当前只有 `/healthz`，业务接口按里程碑逐步开放。
+
 ## 开发
 
 ```bash
 git clone https://github.com/snowfoxHQ/SnowFoxClaw
 cd SnowFoxClaw
-pip install -e .
-python -m build
+pip install -e ".[dev]"
+ruff check .
+ruff format --check .
+pytest
 ```
+
+向量模型等重依赖在 `embed` 额外组中，按需安装：`pip install -e ".[dev,embed]"`。
 
 ## License
 
