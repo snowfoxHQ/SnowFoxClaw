@@ -237,15 +237,18 @@ used_context 是「可解释」的最小要求，调试面板可展示。
 class MemoryRetriever(Protocol):
     def upsert(self, item: MemoryItem) -> str: ...
     def delete(self, ids: list[str]) -> None: ...
-    def search(self, query: str, top_k: int,
-               filters: dict | None = None) -> list[RetrievedItem]: ...
+    def search(
+        self, query: str, top_k: int, filters: dict | None = None
+    ) -> list[RetrievedItem]: ...
+
 
 @dataclass
 class MemoryItem:
     id: str
     text: str
-    metadata: dict          # session_id, type, sensitivity, importance
+    metadata: dict  # session_id, type, sensitivity, importance
     embedding: list[float] | None
+
 
 @dataclass
 class RetrievedItem:
@@ -372,6 +375,7 @@ M0 确定模型与维度并写入 `config.default.yaml` 的 `embedding.dim`，�
 ```python
 class EmbeddingProvider(Protocol):
     dim: int
+
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 ```
 
