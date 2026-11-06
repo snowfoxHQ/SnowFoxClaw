@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:snowfoxclaw:episodic",
+  "title": "EpisodicMemory",
+  "description": "情景记忆摘要，high 敏感需用户确认留痕。见 schema/fields.md 第 3 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "session_id",
+    "ts",
+    "type",
+    "summary",
+    "importance",
+    "confidence",
+    "sensitivity"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^mem_[a-z0-9]{6}$" },
+    "session_id": { "type": "string", "pattern": "^sess_[a-z0-9]{6}$" },
+    "ts": { "$ref": "#/$defs/timestamp" },
+    "type": { "enum": ["event", "fact", "preference_evidence", "task"] },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "entities": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 50 },
+      "default": []
+    },
+    "raw_ref": { "anyOf": [{ "$ref": "#/$defs/turn_ref" }, { "type": "null" }], "default": null },
+    "embedding_ref": {
+      "anyOf": [{ "type": "string", "pattern": "^vec_[a-z0-9]{6}$" }, { "type": "null" }],
+      "default": null
+    },
+    "importance": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sensitivity": { "enum": ["low", "medium", "high"] },
+    "consent": { "$ref": "#/$defs/consent" },
+    "expires_at": {
+      "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }],
+      "default": null
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "sensitivity": { "const": "high" } },
+        "required": ["sensitivity"]
+      },
+      "then": { "required": ["consent"] }
+    }
+  ],
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO8601 带时区，统一 UTC，形如 2026-11-07T10:00:00Z"
+    },
+    "turn_ref": { "type": "string", "pattern": "^turn_[a-z0-9]{6}$" },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirmed_by", "confirmed_at", "channel"],
+      "properties": {
+        "confirmed_by": { "enum": ["user"] },
+        "confirmed_at": { "$ref": "#/$defs/timestamp" },
+        "channel": { "enum": ["cli", "api"] }
+      }
+    }
+  }
+}

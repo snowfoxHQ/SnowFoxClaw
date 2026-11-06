@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:snowfoxclaw:persona",
+  "title": "PersonaProfile",
+  "description": "人格配置，单人格固定 id，版本只增不改。见 schema/fields.md 第 1 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "display_name",
+    "tone",
+    "verbosity",
+    "language",
+    "created_at",
+    "updated_at",
+    "source"
+  ],
+  "properties": {
+    "id": { "const": "persona_default" },
+    "version": { "type": "integer", "minimum": 1 },
+    "display_name": { "type": "string", "minLength": 1, "maxLength": 32 },
+    "tone": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "verbosity": {
+      "enum": ["short", "medium", "long"],
+      "default": "medium"
+    },
+    "language": { "type": "string", "minLength": 2, "maxLength": 35, "default": "zh-CN" },
+    "values": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 100 },
+      "default": []
+    },
+    "boundaries": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 100 },
+      "default": []
+    },
+    "taboos": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 100 },
+      "default": []
+    },
+    "response_style": { "$ref": "#/$defs/response_style" },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "updated_at": { "$ref": "#/$defs/timestamp" },
+    "source": { "enum": ["user_confirmed", "imported", "default"] }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO8601 带时区，统一 UTC，形如 2026-11-07T10:00:00Z"
+    },
+    "response_style": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": { "type": "string", "maxLength": 200 },
+        "emoji": { "enum": ["none", "few", "normal"], "default": "few" }
+      }
+    }
+  }
+}

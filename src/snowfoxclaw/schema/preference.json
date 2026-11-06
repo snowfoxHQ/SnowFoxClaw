@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:snowfoxclaw:preference",
+  "title": "PreferenceItem",
+  "description": "显式或推断偏好，(domain, key) 唯一。见 schema/fields.md 第 2 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "x-unique": [["domain", "key"]],
+  "required": [
+    "id",
+    "domain",
+    "key",
+    "value",
+    "value_type",
+    "confidence",
+    "sensitivity",
+    "source",
+    "created_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^pref_[a-z0-9]{6}$" },
+    "domain": { "enum": ["schedule", "communication", "writing", "general"] },
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^\\S(.*\\S)?$",
+      "description": "写入前需 trim、全角转半角、英文小写；schema 层至少禁止首尾空白"
+    },
+    "value": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "value_type": {
+      "enum": ["text", "number", "time", "bool"],
+      "default": "text"
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sensitivity": { "enum": ["low", "medium", "high"] },
+    "source": { "enum": ["user_explicit", "inferred"] },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "last_used_at": {
+      "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }],
+      "default": null
+    },
+    "superseded_values": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/superseded_value" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO8601 带时区，统一 UTC，形如 2026-11-07T10:00:00Z"
+    },
+    "superseded_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "confidence", "superseded_at"],
+      "properties": {
+        "value": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "superseded_at": { "$ref": "#/$defs/timestamp" }
+      }
+    }
+  }
+}

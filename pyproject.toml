@@ -41,7 +41,7 @@ Issues = "https://github.com/snowfoxHQ/SnowFoxClaw/issues"
 [project.optional-dependencies]
 # 模型运行时较重，一律放 extras，保证 `pip install snowfoxclaw` 不拖入推理栈。
 embed = ["onnxruntime>=1.17"]
-dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10", "jsonschema>=4.21"]
 
 [project.scripts]
 foxclaw = "snowfoxclaw.cli:main"

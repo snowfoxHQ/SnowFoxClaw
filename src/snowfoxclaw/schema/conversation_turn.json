@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:snowfoxclaw:conversation_turn",
+  "title": "ConversationTurn",
+  "description": "单轮对话，used_context 整体存 JSON TEXT。见 schema/fields.md 第 5 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "session_id", "ts", "role", "content", "persona_version"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^turn_[a-z0-9]{6}$" },
+    "session_id": { "type": "string", "pattern": "^sess_[a-z0-9]{6}$" },
+    "ts": { "$ref": "#/$defs/timestamp" },
+    "role": { "enum": ["user", "assistant"] },
+    "content": { "type": "string", "minLength": 1, "maxLength": 32768 },
+    "persona_version": { "type": "integer", "minimum": 1 },
+    "used_context": {
+      "anyOf": [{ "$ref": "#/$defs/used_context" }, { "type": "null" }]
+    },
+    "tokens": {
+      "anyOf": [{ "$ref": "#/$defs/tokens" }, { "type": "null" }],
+      "default": null
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "role": { "const": "user" } },
+        "required": ["role"]
+      },
+      "then": {
+        "properties": { "used_context": { "type": "null" } }
+      }
+    }
+  ],
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO8601 带时区，统一 UTC，形如 2026-11-07T10:00:00Z"
+    },
+    "used_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["persona_version", "preferences_used", "memories_used"],
+      "properties": {
+        "persona_version": { "type": "integer", "minimum": 1 },
+        "preferences_used": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^pref_[a-z0-9]{6}$" },
+          "default": []
+        },
+        "memories_used": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/memory_ref" },
+          "default": []
+        }
+      }
+    },
+    "memory_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sensitivity"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^mem_[a-z0-9]{6}$" },
+        "sensitivity": { "enum": ["low", "medium", "high"] }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prompt": { "type": "integer", "minimum": 0 },
+        "completion": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

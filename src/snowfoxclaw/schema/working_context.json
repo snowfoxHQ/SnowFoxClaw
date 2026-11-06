@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:snowfoxclaw:working_context",
+  "title": "WorkingContext",
+  "description": "会话工作上下文，一个会话一条，ttl 为意图、expires_at 为派生值。见 schema/fields.md 第 4 节。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "ttl", "updated_at", "expires_at"],
+  "properties": {
+    "session_id": { "type": "string", "pattern": "^sess_[a-z0-9]{6}$" },
+    "task_goal": {
+      "anyOf": [{ "type": "string", "maxLength": 300 }, { "type": "null" }],
+      "default": null
+    },
+    "active_entities": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string" },
+      "default": []
+    },
+    "open_questions": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string" },
+      "default": []
+    },
+    "recent_turns": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "$ref": "#/$defs/turn_ref" },
+      "default": []
+    },
+    "ttl": { "type": "string", "pattern": "^[0-9]+[smhd]$", "default": "2h" },
+    "updated_at": { "$ref": "#/$defs/timestamp" },
+    "expires_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "ISO8601 带时区，统一 UTC，形如 2026-11-07T10:00:00Z"
+    },
+    "turn_ref": { "type": "string", "pattern": "^turn_[a-z0-9]{6}$" }
+  }
+}

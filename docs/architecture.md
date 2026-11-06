@@ -174,7 +174,7 @@ Conversation Orchestrator
   "used_context": {
     "persona_version": 1,
     "preferences_used": ["pref_001"],
-    "memories_used": ["mem_001"]
+    "memories_used": [{"id": "mem_001", "sensitivity": "low"}]
   },
   "tokens": {"prompt": 1200, "completion": 300}
 }
