@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "snowfoxclaw"
+version = "0.1.0"
+description = "个人 Agent 智能体，住在你设备里的狐狸"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "SnowFox", email = "snowfox@users.noreply.github.com" }]
+keywords = ["agent", "ai", "assistant", "snowfoxclaw"]
+requires-python = ">=3.10"
+dependencies = []
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/snowfoxHQ/SnowFoxClaw"
+Repository = "https://github.com/snowfoxHQ/SnowFoxClaw"
+Issues = "https://github.com/snowfoxHQ/SnowFoxClaw/issues"
+
+[project.scripts]
+foxclaw = "snowfoxclaw.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/snowfoxclaw"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
