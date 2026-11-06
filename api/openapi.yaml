@@ -1,0 +1,1005 @@
+openapi: 3.1.0
+info:
+  title: SnowFoxClaw
+  description: 个人 Agent 智能体，住在你设备里的狐狸。仅监听 127.0.0.1，无鉴权。
+  version: 0.1.0
+servers:
+- url: http://127.0.0.1:8765
+  description: 本地回环地址
+paths:
+  /healthz:
+    get:
+      tags:
+      - ops
+      summary: 存活检查
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Healthz Healthz Get
+  /v1/chat:
+    post:
+      tags:
+      - chat
+      summary: 发送一轮消息
+      operationId: chat_v1_chat_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/persona:
+    get:
+      tags:
+      - persona
+      summary: 读取当前激活人格
+      operationId: get_persona_v1_persona_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaProfile'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+      - persona
+      summary: 更新人格并升版本
+      operationId: put_persona_v1_persona_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaProfile'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/preferences:
+    get:
+      tags:
+      - preferences
+      summary: 列出偏好
+      operationId: list_preferences_v1_preferences_get
+      parameters:
+      - name: domain
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PreferenceDomain'
+          - type: 'null'
+          title: Domain
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceList'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - preferences
+      summary: 新建偏好
+      operationId: create_preference_v1_preferences_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferenceCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceItem'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/preferences/{pref_id}:
+    patch:
+      tags:
+      - preferences
+      summary: 修改偏好
+      operationId: patch_preference_v1_preferences__pref_id__patch
+      parameters:
+      - name: pref_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Pref Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferencePatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceItem'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - preferences
+      summary: 删除偏好
+      operationId: delete_preference_v1_preferences__pref_id__delete
+      parameters:
+      - name: pref_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Pref Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: 'null'
+                title: Response Delete Preference V1 Preferences  Pref Id  Delete
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/memories:
+    get:
+      tags:
+      - memories
+      summary: 检索记忆
+      operationId: list_memories_v1_memories_get
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Query
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/MemoryType'
+          - type: 'null'
+          title: Type
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryList'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/memories/{id}:
+    delete:
+      tags:
+      - memories
+      summary: 删除记忆
+      operationId: delete_memory_v1_memories__id__delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: 'null'
+                title: Response Delete Memory V1 Memories  Id  Delete
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/sessions/{session_id}/context:
+    get:
+      tags:
+      - context
+      summary: 读取工作上下文
+      operationId: get_context_v1_sessions__session_id__context_get
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Session Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingContext'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/eval/run:
+    post:
+      tags:
+      - eval
+      summary: 运行评估用例
+      operationId: run_eval_v1_eval_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvalRunRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalRunResponse'
+        '501':
+          description: 该里程碑尚未实现
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ChatRequest:
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          title: Session Id
+        message:
+          type: string
+          maxLength: 32000
+          minLength: 1
+          title: Message
+      type: object
+      required:
+      - session_id
+      - message
+      title: ChatRequest
+    ChatResponse:
+      properties:
+        reply:
+          type: string
+          title: Reply
+        used_context:
+          $ref: '#/components/schemas/UsedContext'
+      type: object
+      required:
+      - reply
+      - used_context
+      title: ChatResponse
+    Consent:
+      properties:
+        confirmed_by:
+          type: string
+          const: user
+          title: Confirmed By
+        confirmed_at:
+          type: string
+          title: Confirmed At
+        channel:
+          type: string
+          enum:
+          - cli
+          - api
+          title: Channel
+      type: object
+      required:
+      - confirmed_by
+      - confirmed_at
+      - channel
+      title: Consent
+    ErrorResponse:
+      properties:
+        error:
+          type: string
+          title: Error
+        milestone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Milestone
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    EvalRunRequest:
+      properties:
+        case_ids:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Case Ids
+      type: object
+      title: EvalRunRequest
+      description: 不传 case_ids 表示跑全部用例。
+    EvalRunResponse:
+      properties:
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+        passed:
+          type: integer
+          minimum: 0.0
+          title: Passed
+        failed:
+          type: integer
+          minimum: 0.0
+          title: Failed
+        failures:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Failures
+      type: object
+      required:
+      - total
+      - passed
+      - failed
+      title: EvalRunResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    MemoryItem:
+      properties:
+        id:
+          type: string
+          title: Id
+        session_id:
+          type: string
+          title: Session Id
+        ts:
+          type: string
+          title: Ts
+        type:
+          $ref: '#/components/schemas/MemoryType'
+        summary:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Summary
+        entities:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Entities
+        raw_ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Raw Ref
+        embedding_ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Embedding Ref
+        importance:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Importance
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+        sensitivity:
+          $ref: '#/components/schemas/Sensitivity'
+        consent:
+          anyOf:
+          - $ref: '#/components/schemas/Consent'
+          - type: 'null'
+        expires_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expires At
+      type: object
+      required:
+      - id
+      - session_id
+      - ts
+      - type
+      - summary
+      - importance
+      - confidence
+      - sensitivity
+      title: MemoryItem
+    MemoryList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/MemoryItem'
+          type: array
+          title: Items
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: MemoryList
+    MemoryRef:
+      properties:
+        id:
+          type: string
+          title: Id
+        sensitivity:
+          $ref: '#/components/schemas/Sensitivity'
+      type: object
+      required:
+      - id
+      - sensitivity
+      title: MemoryRef
+    MemoryType:
+      type: string
+      enum:
+      - event
+      - fact
+      - preference_evidence
+      - task
+      title: MemoryType
+    PersonaProfile:
+      properties:
+        id:
+          type: string
+          title: Id
+        version:
+          type: integer
+          minimum: 1.0
+          title: Version
+        display_name:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Display Name
+        tone:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Tone
+        verbosity:
+          $ref: '#/components/schemas/Verbosity'
+        language:
+          type: string
+          title: Language
+        values:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Values
+        boundaries:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Boundaries
+        taboos:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Taboos
+        response_style:
+          $ref: '#/components/schemas/ResponseStyle'
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+        source:
+          type: string
+          enum:
+          - user_confirmed
+          - imported
+          - default
+          title: Source
+      type: object
+      required:
+      - id
+      - version
+      - display_name
+      - tone
+      - verbosity
+      - language
+      - created_at
+      - updated_at
+      - source
+      title: PersonaProfile
+    PersonaUpdate:
+      properties:
+        display_name:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Display Name
+        tone:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Tone
+        verbosity:
+          $ref: '#/components/schemas/Verbosity'
+          default: medium
+        language:
+          type: string
+          title: Language
+          default: zh-CN
+        values:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Values
+        boundaries:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Boundaries
+        taboos:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Taboos
+        response_style:
+          $ref: '#/components/schemas/ResponseStyle'
+      type: object
+      required:
+      - display_name
+      - tone
+      title: PersonaUpdate
+      description: PUT 请求体：不含 id / version / 时间戳，那些由服务端管。
+    PreferenceCreate:
+      properties:
+        domain:
+          $ref: '#/components/schemas/PreferenceDomain'
+        key:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Key
+        value:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Value
+        value_type:
+          $ref: '#/components/schemas/ValueType'
+          default: text
+        sensitivity:
+          $ref: '#/components/schemas/Sensitivity'
+          default: low
+        source:
+          type: string
+          enum:
+          - user_explicit
+          - inferred
+          title: Source
+          default: user_explicit
+      type: object
+      required:
+      - domain
+      - key
+      - value
+      title: PreferenceCreate
+    PreferenceDomain:
+      type: string
+      enum:
+      - schedule
+      - communication
+      - writing
+      - general
+      title: PreferenceDomain
+    PreferenceItem:
+      properties:
+        id:
+          type: string
+          title: Id
+        domain:
+          $ref: '#/components/schemas/PreferenceDomain'
+        key:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Key
+        value:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Value
+        value_type:
+          $ref: '#/components/schemas/ValueType'
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+        sensitivity:
+          $ref: '#/components/schemas/Sensitivity'
+        source:
+          type: string
+          enum:
+          - user_explicit
+          - inferred
+          title: Source
+        created_at:
+          type: string
+          title: Created At
+        last_used_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Used At
+        superseded_values:
+          items:
+            $ref: '#/components/schemas/SupersededValue'
+          type: array
+          maxItems: 5
+          title: Superseded Values
+      type: object
+      required:
+      - id
+      - domain
+      - key
+      - value
+      - value_type
+      - confidence
+      - sensitivity
+      - source
+      - created_at
+      title: PreferenceItem
+    PreferenceList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PreferenceItem'
+          type: array
+          title: Items
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PreferenceList
+    PreferencePatch:
+      properties:
+        value:
+          anyOf:
+          - type: string
+            maxLength: 500
+            minLength: 1
+          - type: 'null'
+          title: Value
+        value_type:
+          anyOf:
+          - $ref: '#/components/schemas/ValueType'
+          - type: 'null'
+        confidence:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Confidence
+        sensitivity:
+          anyOf:
+          - $ref: '#/components/schemas/Sensitivity'
+          - type: 'null'
+      type: object
+      title: PreferencePatch
+    ResponseStyle:
+      properties:
+        format:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Format
+        emoji:
+          anyOf:
+          - type: string
+            enum:
+            - none
+            - few
+            - normal
+          - type: 'null'
+          title: Emoji
+      type: object
+      title: ResponseStyle
+    Sensitivity:
+      type: string
+      enum:
+      - low
+      - medium
+      - high
+      title: Sensitivity
+    SupersededValue:
+      properties:
+        value:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Value
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+        superseded_at:
+          type: string
+          title: Superseded At
+      type: object
+      required:
+      - value
+      - confidence
+      - superseded_at
+      title: SupersededValue
+    UsedContext:
+      properties:
+        persona_version:
+          type: integer
+          minimum: 1.0
+          title: Persona Version
+        preferences_used:
+          items:
+            type: string
+          type: array
+          title: Preferences Used
+        memories_used:
+          items:
+            $ref: '#/components/schemas/MemoryRef'
+          type: array
+          title: Memories Used
+      type: object
+      required:
+      - persona_version
+      title: UsedContext
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ValueType:
+      type: string
+      enum:
+      - text
+      - number
+      - time
+      - bool
+      title: ValueType
+    Verbosity:
+      type: string
+      enum:
+      - short
+      - medium
+      - long
+      title: Verbosity
+    WorkingContext:
+      properties:
+        session_id:
+          type: string
+          title: Session Id
+        task_goal:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Task Goal
+        active_entities:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Active Entities
+        open_questions:
+          items:
+            type: string
+          type: array
+          maxItems: 10
+          title: Open Questions
+        recent_turns:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Recent Turns
+        ttl:
+          type: string
+          title: Ttl
+        updated_at:
+          type: string
+          title: Updated At
+        expires_at:
+          type: string
+          title: Expires At
+      type: object
+      required:
+      - session_id
+      - ttl
+      - updated_at
+      - expires_at
+      title: WorkingContext

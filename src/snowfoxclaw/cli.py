@@ -12,6 +12,22 @@ import sys
 from snowfoxclaw import __version__
 
 
+def _cmd_openapi(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    import yaml
+
+    from snowfoxclaw.api.server import create_app
+
+    document = create_app().openapi()
+    text = yaml.safe_dump(document, allow_unicode=True, sort_keys=False, width=100)
+    target = Path(args.out)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    print(f"已写出 {target}")
+    return 0
+
+
 def _cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
@@ -44,6 +60,10 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--port", type=int, default=8765, help="监听端口，默认 8765")
     serve.add_argument("--log-level", default="info", help="uvicorn 日志级别")
     serve.set_defaults(handler=_cmd_serve)
+
+    openapi = subparsers.add_parser("openapi", help="导出 OpenAPI 契约")
+    openapi.add_argument("--out", default="api/openapi.yaml", help="输出路径")
+    openapi.set_defaults(handler=_cmd_openapi)
 
     return parser
 
